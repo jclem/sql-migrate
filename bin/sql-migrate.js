@@ -5,13 +5,12 @@
 var fs      = require('fs');
 var path    = require('path');
 var program = require('commander');
-var url     = require('url');
 var lib     = require ('../lib/index.js');
 var version = getVersion();
 
 program
   .version(version)
-  .option('-d, --database [name]', 'the database to use. defaults to process.env.DATABASE_URL')
+  .option('-d, --database [name]', 'the database to use. if not provided, database defaults to process.env.DATABASE_URL')
   .option('-m, --migration-dir [dir]', 'the relative location of the migrations directory. defaults to ./migrations');
 
 program
@@ -25,39 +24,42 @@ program
   .command('up [steps]')
   .description('migrate up')
   .action(function(steps) {
-    var databaseName;
+    var databaseURL;
 
     try {
-      databaseName = getDatabase(program);
+      databaseURL = getDatabaseURL(program);
     } catch(err) {
       return console.error('\n  error: database not provided or not detected\n');
     }
 
     steps = steps === undefined ? steps : +steps;
-    return lib.change(steps, 'up', databaseName);
+    return lib.change(steps, 'up', databaseURL);
   });
 
 program
   .command('down [steps]')
   .description('migrate down')
   .action(function(steps) {
-    var databaseName;
+    var databaseURL;
 
     try {
-      databaseName = getDatabase(program);
+      databaseURL = getDatabaseURL(program);
     } catch(err) {
       return console.error('\n  error: database not provided or not detected\n');
     }
 
     steps = steps === undefined ? 1 : +steps;
-    return lib.change(steps, 'down', databaseName);
+    return lib.change(steps, 'down', databaseURL);
   });
 
 program.parse(process.argv);
 
-function getDatabase(program) {
-  return program.database ||
-    url.parse(process.env.DATABASE_URL).pathname.slice(1);
+function getDatabaseURL(program) {
+  if (program.database) {
+    return 'postgres://localhost:5432/' + program.database;
+  } else {
+    return process.env.DATABASE_URL;
+  }
 }
 
 function getMigrationDir(program) {
