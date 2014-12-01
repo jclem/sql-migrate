@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/jclem/sql-migrate",
   "dependencies": {
+    "async": "^0.9.0",
     "commander": "^2.2.0",
     "strftime": "^0.8.0"
   }
